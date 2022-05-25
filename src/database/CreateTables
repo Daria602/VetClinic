@@ -1,0 +1,152 @@
+-- DOCTORS table
+create sequence employee_id_seq;
+alter sequence employee_id_seq restart with 1 increment by 1;
+create table DOCTORS(
+    doctor_id int not null default nextval('employee_id_seq'),
+    lastName varchar(255) not null,
+    firstName varchar(255) not null,
+    phoneNumber varchar(255) not null,
+    email varchar(255),
+    password varchar(255),
+    specialization varchar(255),
+    yearOfGraduation int,
+    PRIMARY KEY(doctor_id)
+);
+alter table DOCTORS add constraint doctor_email_unique unique  (email);
+
+
+-- OWNERS table
+create sequence owner_id_seq;
+alter sequence owner_id_seq restart with 1 increment by 1;
+create table OWNERS(
+    owner_id int not null default nextval('owner_id_seq'),
+    lastName varchar(255) not null,
+    firstName varchar(255) not null,
+    phoneNumber varchar(255) not null,
+    email varchar(255),
+    password varchar(255),
+    PRIMARY KEY(owner_id)
+);
+alter table OWNERS add constraint owner_email_unique unique  (email);
+
+-- ANIMALS table
+create sequence animal_id_seq;
+alter sequence animal_id_seq restart with 1 increment by 1;
+create table ANIMALS(
+    animal_id int not null default nextval('animal_id_seq'),
+    name varchar(255) not null,
+    species varchar(255) not null,
+    yearOfBirth int not null,
+    neutered boolean,
+    gender varchar(10),
+    weight_kg int,
+    owner_id int,
+    PRIMARY KEY(animal_id),
+    CONSTRAINT fk_owner FOREIGN KEY(owner_id) REFERENCES owners(owner_id)
+);
+
+-- MEDICATION table
+create sequence medication_id_seq;
+alter sequence medication_id_seq restart with 1 increment by 1;
+create table MEDICATION(
+    medication_id int not null default nextval('medication_id_seq'),
+    medicationName varchar(255) not null,
+    prescribedFor varchar(255),
+    PRIMARY KEY(medication_id)
+);
+
+-- DOCTORVISIT table
+create sequence visit_id_seq;
+alter sequence visit_id_seq restart with 1 increment by 1;
+create table DOCTORVISIT(
+    visit_id int not null default nextval('visit_id_seq'),
+    visitDate date,
+    doctor_id int,
+    animal_id int,
+    reasonForVisit varchar(255),
+    diagnosis varchar(255),
+    PRIMARY KEY(visit_id),
+    CONSTRAINT fk_doctor FOREIGN KEY(doctor_id) REFERENCES doctors(doctor_id),
+    CONSTRAINT fk_animal FOREIGN KEY(animal_id) REFERENCES animals(animal_id)
+);
+
+-- VISITMEDICATION table
+create table VISITMEDICATION(
+    visit_id int,
+    medication_id int,
+    PRIMARY KEY(visit_id, medication_id),
+    CONSTRAINT fk_visit FOREIGN KEY(visit_id) REFERENCES doctorvisit(visit_id),
+    CONSTRAINT fk_medication FOREIGN KEY(medication_id) REFERENCES medication(medication_id)
+);
+
+
+-- inserting the mock data
+--doctors
+insert into DOCTORS (lastName, firstName, phoneNumber, email, password, specialization, yearOfGraduation) values ('Tolotti', 'Grannie', '5435040221', 'doctor1@info.ro', 'doctor1', 'general', 1995);
+insert into DOCTORS (lastName, firstName, phoneNumber, email, password, specialization, yearOfGraduation) values ('Kinnerley', 'Matteo', '6746019810', 'doctor2@info.ro', 'doctor2', 'cardiology', 2007);
+insert into DOCTORS (lastName, firstName, phoneNumber, email, password, specialization, yearOfGraduation) values ('Abells', 'Nannie', '5106264727', 'doctor3@info.ro', 'doctor3', 'orthopedic', 2005);
+insert into DOCTORS (lastName, firstName, phoneNumber, email, password, specialization, yearOfGraduation) values ('Bockler', 'Alphonse', '3488159577', 'doctor4@info.ro', 'doctor4', 'gastroenterology', 2002);
+insert into DOCTORS (lastName, firstName, phoneNumber, email, password, specialization, yearOfGraduation) values ('Hollyer', 'Bren', '3394774553', 'doctor5@info.ro', 'doctor5', 'general', 2004);
+
+--groomers
+insert into GROOMERS (lastName, firstName, phoneNumber, email, password, specialization) values ('Newey', 'Siana', '1496974732', 'groomer1@info.ro', 'groomer1', 'dogs');
+insert into GROOMERS (lastName, firstName, phoneNumber, email, password, specialization) values ('Tedder', 'Donnie', '4319352791', 'groomer2@info.ro', 'groomer2', 'dogs');
+insert into GROOMERS (lastName, firstName, phoneNumber, email, password, specialization) values ('Librey', 'Jayme', '3522176444', 'groomer3@info.ro', 'groomer3', 'cats');
+insert into GROOMERS (lastName, firstName, phoneNumber, email, password, specialization) values ('Otter', 'Lonnie', '4468132543', 'groomer4@info.ro', 'groomer4', 'dogs');
+insert into GROOMERS (lastName, firstName, phoneNumber, email, password, specialization) values ('Babonau', 'Edgard', '9033105527', 'groomer5@info.ro', 'groomer5', 'cats');
+
+--owners
+insert into OWNERS (lastName, firstName, phoneNumber, email, password) values ('Muddimer', 'Isabella', '8013602156', 'owner1@info.ro', 'owner1');
+insert into OWNERS (lastName, firstName, phoneNumber, email, password) values ('Dunseith', 'Germain', '1187241181', 'owner2@info.ro', 'owner2');
+insert into OWNERS (lastName, firstName, phoneNumber, email, password) values ('Heath', 'Van', '8563416299', 'owner3@info.ro', 'owner3');
+insert into OWNERS (lastName, firstName, phoneNumber, email, password) values ('Hubback', 'Debra', '3639759776', 'owner4@info.ro', 'owner4');
+insert into OWNERS (lastName, firstName, phoneNumber, email, password) values ('Keyes', 'Theodoric', '4589118432', 'owner5@info.ro', 'owner5');
+
+--animals
+insert into ANIMALS (name, species, yearOfBirth, neutered, gender, weight_kg, owner_id) values ('Christen', 'cat', 1992, false, 'Female', 7, 2);
+insert into ANIMALS (name, species, yearOfBirth, neutered, gender, weight_kg, owner_id) values ('Bentlee', 'rat', 1997, false, 'Male', 28, 3);
+insert into ANIMALS (name, species, yearOfBirth, neutered, gender, weight_kg, owner_id) values ('Ulberto', 'fish', 1987, false, 'Male', 38, 4);
+insert into ANIMALS (name, species, yearOfBirth, neutered, gender, weight_kg, owner_id) values ('Templeton', 'dog', 1995, false, 'Male', 6, 5);
+insert into ANIMALS (name, species, yearOfBirth, neutered, gender, weight_kg, owner_id) values ('La verne', 'cat', 2007, false, 'Female', 45, 1);
+insert into ANIMALS (name, species, yearOfBirth, neutered, gender, weight_kg, owner_id) values ('Franklyn', 'rat', 1988, false, 'Male', 33, 2);
+insert into ANIMALS (name, species, yearOfBirth, neutered, gender, weight_kg, owner_id) values ('Darius', 'fish', 1992, false, 'Male', 23, 3);
+insert into ANIMALS (name, species, yearOfBirth, neutered, gender, weight_kg, owner_id) values ('Urbano', 'dog', 1996, true, 'Male', 42, 4);
+insert into ANIMALS (name, species, yearOfBirth, neutered, gender, weight_kg, owner_id) values ('Rheba', 'cat', 2008, true, 'Female', 11, 5);
+insert into ANIMALS (name, species, yearOfBirth, neutered, gender, weight_kg, owner_id) values ('Janene', 'rat', 1987, false, 'Female', 11, 1);
+
+--medication
+insert into MEDICATION (medicationName, prescribedFor) values ('ESTRADIOL', 'internal parasites');
+insert into MEDICATION (medicationName, prescribedFor) values ('BENAZEPRIL HYDROCHLORIDE', 'anti stress');
+insert into MEDICATION (medicationName, prescribedFor) values ('Baby Wipes with Allantoin', 'anti vomiting');
+insert into MEDICATION (medicationName, prescribedFor) values ('Leader', 'anti inflammatory');
+
+--doctorvisit
+insert into DOCTORVISIT (visitDate, doctor_id, animal_id, reasonForVisit, diagnosis) values ('2022-05-21 13:29:00', 2, 4, 'weak', 'Nothing');
+insert into DOCTORVISIT (visitDate, doctor_id, animal_id, reasonForVisit, diagnosis) values ('2022-05-14 05:19:11', 3, 10, 'vomiting', 'Cancer');
+insert into DOCTORVISIT (visitDate, doctor_id, animal_id, reasonForVisit, diagnosis) values ('2022-05-19 21:20:32', 4, 3, 'bad stool', 'Parvovirus');
+insert into DOCTORVISIT (visitDate, doctor_id, animal_id, reasonForVisit, diagnosis) values ('2022-05-10 16:12:14', 5, 2, 'regular check', 'Diabetes');
+insert into DOCTORVISIT (visitDate, doctor_id, animal_id, reasonForVisit, diagnosis) values ('2022-05-05 17:43:41', 1, 1, 'doesnt eat', 'Nothing');
+insert into DOCTORVISIT (visitDate, doctor_id, animal_id, reasonForVisit, diagnosis) values ('2022-05-17 09:43:35', 2, 3, 'weak', 'Cancer');
+
+--groomervisit
+insert into GROOMERVISIT (visitDate, groomer_id, animal_id) values ('2022-05-13 03:22:16', 7, 4);
+insert into GROOMERVISIT (visitDate, groomer_id, animal_id) values ('2022-05-08 06:31:54', 10, 7);
+insert into GROOMERVISIT (visitDate, groomer_id, animal_id) values ('2022-05-11 19:49:13', 10, 7);
+insert into GROOMERVISIT (visitDate, groomer_id, animal_id) values ('2022-05-07 07:39:55', 9, 7);
+insert into GROOMERVISIT (visitDate, groomer_id, animal_id) values ('2022-05-20 11:25:10', 10, 2);
+insert into GROOMERVISIT (visitDate, groomer_id, animal_id) values ('2022-05-08 01:09:59', 8, 8);
+
+--visitmedication
+insert into visitmedication(visit_id, medication_id) values (2,3);
+insert into visitmedication(visit_id, medication_id) values (2,4);
+insert into visitmedication(visit_id, medication_id) values (3,1);
+insert into visitmedication(visit_id, medication_id) values (3,3);
+insert into visitmedication(visit_id, medication_id) values (6,3);
+insert into visitmedication(visit_id, medication_id) values (6,4);
+
+
+
+
+
+
+

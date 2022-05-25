@@ -1,0 +1,4 @@
+id,lastname,firstname,phonenumber,email,password,specialization,yearOfGraduation
+1, James, Jo, 123456, doctor1@info.ro, doctor1, cardio,2022
+2, Foo, Fa, 123456, doctor2@info.ro, doctor2, general,2000
+3,Turner,James,123456,doctor3@info.ro,doctor3,general,2000

@@ -1,0 +1,4 @@
+id,visitdate,doctor_id,animal_id,reasonforvisit,diagnosis
+1,2022-05-22,1,1, something, something
+2,2022-05-17,2,2, something, something
+3,2022-05-14,3,3,weakness,none

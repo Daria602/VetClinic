@@ -1,0 +1,4 @@
+id,name,species,yearofbirth,neutered,gender,weight_kg,owner_id
+1, Doggy, dog,2012,true, male,7,1
+2, Catty, cat,2012,true, female,2,2
+3,Doggio,cat,2020,false,female,3,3

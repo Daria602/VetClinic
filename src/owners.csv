@@ -1,0 +1,3 @@
+id, lastname, firstname, email, password, phonenumber
+1, Hello, Hell, owner1@info.ro, owner1, 123456
+2, Jenner, Jim, owner2@info.ro, owner2, 123456
