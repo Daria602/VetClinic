@@ -4,6 +4,7 @@ import managers.MedicationManager;
 import managers.VisitManager;
 import services.*;
 
+import java.io.IOException;
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -14,6 +15,7 @@ public class Menu {
     private final VisitService visitService;
     private final OwnerService ownerService;
     private final MedicationService medicationService;
+    private Auditing auditing;
     private final Scanner scanner;
     public boolean running;
     public static final String titleMenu = """
@@ -27,22 +29,23 @@ public class Menu {
             2 - Register as an Owner
             """;
 
-    public Menu() {
+    public Menu() throws IOException {
         this.doctorService = new DoctorService();
         this.animalService = new AnimalService();
         this.visitService = new VisitService();
         this.ownerService = new OwnerService();
         this.medicationService = new MedicationService();
+        this.auditing = new Auditing();
         this.scanner = new Scanner(System.in);
         this.running = true;
     }
 
-    public void start() {
+    public void start() throws IOException {
         options();
 
     }
 
-    public void options() {
+    public void options() throws IOException {
         String starterLine = titleMenu + startMenu;
         while (this.running) {
             System.out.println(starterLine);
@@ -71,7 +74,7 @@ public class Menu {
 
     }
 
-    public void login() {
+    public void login() throws IOException {
         String loginOption = """
                             Enter your choice:
                 0 - Back
@@ -85,6 +88,7 @@ public class Menu {
                 case "1":
                     Doctor dr = doctorService.loginDoctor(scanEmail(), scanPassword());
                     if (dr != null) {
+                        this.auditing.writeAnAction("doctor login");
                         displayDoctorsActions(dr);
                         return;
                     }
@@ -93,6 +97,7 @@ public class Menu {
                 case "2":
                     Owner owner = ownerService.loginOwner(scanEmail(), scanPassword());
                     if (owner != null) {
+                        this.auditing.writeAnAction("owner login");
                         displayOwnersActions(owner);
                         return;
                     }
@@ -104,9 +109,11 @@ public class Menu {
             System.out.println(loginOption);
             loginAction = this.scanner.nextLine();
         }
+
+        this.auditing.closeTheFile();
     }
 
-    private void displayDoctorsActions(Doctor dr) {
+    private void displayDoctorsActions(Doctor dr) throws IOException {
         String doctorsActions = """
                 0 - Exit
                 1 - Review future visits
@@ -131,6 +138,7 @@ public class Menu {
             switch (action) {
                 case "1":
                     ArrayList<VisitManager> result = this.doctorService.showVisits(false, false, dr.getId());
+                    this.auditing.writeAnAction("doctor sees future visits");
                     if (result.size() == 0) System.out.println("No future visits found.\n");
                     else {
                         for (int i = 0; i < result.size(); i++) {
@@ -140,6 +148,7 @@ public class Menu {
                     break;
                 case "2":
                     ArrayList<VisitManager> result1 = this.doctorService.showVisits(false, true, dr.getId());
+                    this.auditing.writeAnAction("doctor sees today visits");
                     if (result1.size() == 0) System.out.println("No visits for today found.\n");
                     else {
                         for (int i = 0; i < result1.size(); i++) {
@@ -149,6 +158,7 @@ public class Menu {
                     break;
                 case "3":
                     ArrayList<VisitManager> result2 = this.doctorService.showVisits(true, false, dr.getId());
+                    this.auditing.writeAnAction("doctor sees past visits");
                     if (result2.size() == 0) System.out.println("No past visits found.\n");
                     else {
                         for (int i = 0; i < result2.size(); i++) {
@@ -160,6 +170,7 @@ public class Menu {
                     System.out.println("Enter the id of the owner: ");
                     int id1 = Integer.parseInt(this.scanner.nextLine());
                     ArrayList<AnimalManager> result3 = this.animalService.getAnimalsByOwnerId(id1);
+                    this.auditing.writeAnAction("doctor sees animals by ownerid");
                     if (result3.size() != 0) {
                         for (int i = 0; i < result3.size(); i++) {
                             System.out.println(result3.get(i));
@@ -170,7 +181,10 @@ public class Menu {
                     System.out.println("Enter the id of the animal: ");
                     int id2 = Integer.parseInt(this.scanner.nextLine());
                     AnimalManager result4 = this.animalService.getAnimalById(id2);
-                    if (result4 != null) System.out.println(result4);
+                    if (result4 != null){
+                        System.out.println(result4);
+                        this.auditing.writeAnAction("doctor sees specific animal");
+                    }
                     else System.out.println(String.format("Animal of id %d was not found.", id2));
 
                     break;
@@ -186,7 +200,10 @@ public class Menu {
                         Date visitDate = Date.valueOf(dateString);
                         DoctorVisit dv = new DoctorVisit(visitDate, doctor_id, animal_id, reason, "null");
                         boolean doctorVisitInserted = this.visitService.scheduleNewDoctorVisit(dv);
-                        if (doctorVisitInserted) System.out.println("New visit scheduled with success!");
+                        if (doctorVisitInserted){
+                            System.out.println("New visit scheduled with success!");
+                            this.auditing.writeAnAction("doctor schedules new visit");
+                        }
                         else System.out.println("Something went wrong...");
 
                     } catch (IllegalArgumentException e) {
@@ -206,7 +223,10 @@ public class Menu {
                     System.out.println("Enter new owner's password");
                     String password = this.scanner.nextLine();
                     boolean ownerInserted = this.ownerService.registerNewOwner(new Owner(lname, fname, email, password, phoneNumber));
-                    if (ownerInserted) System.out.println("New owner registered successfully!");
+                    if (ownerInserted) {
+                        System.out.println("New owner registered successfully!");
+                        this.auditing.writeAnAction("doctor added new owner");
+                    }
                     else System.out.println("Something went wrong...");
 
                     break;
@@ -226,8 +246,11 @@ public class Menu {
                     System.out.println("Enter new doctor's year of graduation");
                     int yearOfGrad = Integer.parseInt(this.scanner.nextLine());
                     boolean inserted = this.doctorService.registerNewDoctor(new Doctor(lnamed, fnamed, phoneNumberd, emaild, passwordd, specialization, yearOfGrad));
-                    if (inserted) System.out.println("New doctor added successfully");
-                    else System.out.println("Something went wrong during the registration.");
+                    if (inserted){
+                        System.out.println("New doctor added successfully");
+                        this.auditing.writeAnAction("doctor added new doctor");
+                    }
+                    else System.out.println("Something went wrong...");
                     break;
 
                 case "9":
@@ -248,7 +271,10 @@ public class Menu {
                     int ownerId = Integer.parseInt(this.scanner.nextLine());
 
                     boolean animalInserted = this.animalService.registerNewAnimal(new Animal(name, species, yearOfBirth, wasNeutered, gender, weight, ownerId));
-                    if (animalInserted) System.out.println("New animal added successfully");
+                    if (animalInserted){
+                        System.out.println("New animal added successfully");
+                        this.auditing.writeAnAction("doctor added new animal");
+                    }
                     else System.out.println("Something went wrong...");
                     break;
 
@@ -258,7 +284,10 @@ public class Menu {
                     System.out.println("What is it usually prescribed for?");
                     String prescribedFor = this.scanner.nextLine();
                     boolean medicationInserted = this.medicationService.addNewMedication(new Medication(medName, prescribedFor));
-                    if (medicationInserted) System.out.println("Added successfully!");
+                    if (medicationInserted){
+                        System.out.println("Added successfully!");
+                        this.auditing.writeAnAction("doctor added new medication");
+                    }
                     else System.out.println("Something went wrong...");
                     break;
 
@@ -266,12 +295,16 @@ public class Menu {
                     System.out.println("Enter the id of the medication to delete:");
                     int id = Integer.parseInt(this.scanner.nextLine());
                     boolean deleted = this.medicationService.removeMedication(id);
-                    if (deleted) System.out.println("Removed successfully!");
+                    if (deleted){
+                        System.out.println("Removed successfully!");
+                        this.auditing.writeAnAction("doctor removed medication");
+                    }
                     else System.out.println("Something went wrong...");
                 case "12":
                     System.out.println("Enter animal id:");
                     int animalId = Integer.parseInt(this.scanner.nextLine());
                     ArrayList<Medication> resultMedication = this.medicationService.getMedicationForSpecificAnimal(animalId);
+                    this.auditing.writeAnAction("doctor searched medication by animal_id");
                     if (resultMedication == null) System.out.println("No medication was found.");
                     else {
                         for (int i = 0; i < resultMedication.size(); i++) {
@@ -282,6 +315,7 @@ public class Menu {
                     break;
                 case "13":
                     ArrayList<Medication> meds = this.medicationService.getAllMedication();
+                    this.auditing.writeAnAction("doctor searched all medication");
                     if (meds != null){
                         for (int i = 0; i < meds.size(); i++){
                             System.out.println(meds.get(i));
@@ -300,7 +334,10 @@ public class Menu {
                         System.out.println("Incorrect field.");
                     } else{
                         boolean updatedMedication = this.medicationService.updateMedicationById(idMed, fieldToUpdate, newValue);
-                        if (updatedMedication) System.out.println("Updated successfully!");
+                        if (updatedMedication){
+                            System.out.println("Updated successfully!");
+                            this.auditing.writeAnAction("doctor updates medication");
+                        }
                         else System.out.println("Something went wrong...");
                     }
 
@@ -308,6 +345,7 @@ public class Menu {
 
                 case "15":
                     ArrayList<Owner> allOwners = this.ownerService.getAllOwners();
+                    this.auditing.writeAnAction("doctor sees all owners");
                     if (allOwners != null){
                         for (int i = 0; i < allOwners.size(); i++){
                             System.out.println(allOwners.get(i));
@@ -326,7 +364,7 @@ public class Menu {
 
     }
 
-    private void displayOwnersActions(Owner owner) {
+    private void displayOwnersActions(Owner owner) throws IOException {
         owner.setPets(this.animalService.getAnimalsByOwnerId(owner.getId()));
         String ownersActions = """
                 0 - Exit
@@ -344,6 +382,7 @@ public class Menu {
             switch (action) {
                 case "1":
                     ArrayList<AnimalManager> myAnimals = this.animalService.getAnimalsByOwnerId(owner.getId());
+                    this.auditing.writeAnAction("owner sees his animals");
                     if (myAnimals != null) {
                         System.out.println("My animals <3 :");
                         for (int i = 0; i < myAnimals.size(); i++) {
@@ -367,7 +406,10 @@ public class Menu {
                     int weight = Integer.parseInt(this.scanner.nextLine());
                     int ownerId = owner.getId();
                     boolean animalInserted = this.animalService.registerNewAnimal(new Animal(name, species, yearOfBirth, wasNeutered, gender, weight, ownerId));
-                    if (animalInserted) System.out.println("New animal added successfully");
+                    if (animalInserted){
+                        System.out.println("New animal added successfully");
+                        this.auditing.writeAnAction("owner inserts new animal");
+                    }
                     else System.out.println("Something went wrong...");
                     break;
                 case "3":
@@ -383,7 +425,10 @@ public class Menu {
                         Date visitDate = Date.valueOf(dateString);
                         DoctorVisit dv = new DoctorVisit(visitDate, doctor_id, animal_id, reason, "null");
                         boolean doctorVisitInserted = this.visitService.scheduleNewDoctorVisit(dv);
-                        if (doctorVisitInserted) System.out.println("New visit scheduled with success!");
+                        if (doctorVisitInserted){
+                            System.out.println("New visit scheduled with success!");
+                            this.auditing.writeAnAction("owner schedules new visit");
+                        }
                         else System.out.println("Something went wrong...");
 
                     } catch (IllegalArgumentException e) {
@@ -406,7 +451,10 @@ public class Menu {
                             System.out.println("What is the new value?");
                             String value = this.scanner.nextLine();
                             boolean animalUpdated = this.animalService.updateField(idAnimal, fieldToUpdate, value);
-                            if (animalUpdated) System.out.println("Updated successfully!");
+                            if (animalUpdated){
+                                System.out.println("Updated successfully!");
+                                this.auditing.writeAnAction("owner updates animal");
+                            }
                             else System.out.println("Something went wrong...");
                         }
                     }
@@ -418,6 +466,7 @@ public class Menu {
                     int animalId = this.animalService.getIdAnimalByNameAndOwnerId(petName, owner.getId());
                     ArrayList<Medication> resultMedication = this.medicationService.getMedicationForSpecificAnimal(animalId);
                     ArrayList<MedicationManager> finalResult = this.medicationService.convertListOfMedication(resultMedication);
+                    this.auditing.writeAnAction("owner sees animal's medication");
 
                     if (finalResult.size() == 0) System.out.println("No medication was found.");
                     else {
@@ -434,7 +483,10 @@ public class Menu {
                         System.out.println("What is the new value?");
                         String newValue = this.scanner.nextLine();
                         boolean updatedOwner = this.ownerService.updateOwner(owner.getId(), fieldToUpdate, newValue);
-                        if (updatedOwner) System.out.println("Updated successfully!");
+                        if (updatedOwner){
+                            System.out.println("Updated successfully!");
+                            this.auditing.writeAnAction("owner updates their profile");
+                        }
                         else System.out.println("Something went wrong...");
                     }else System.out.println("Wrong field. Select from (lastname, firstname, phonenumber, email, password)");
 

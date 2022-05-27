@@ -122,12 +122,4 @@ public class DoctorRepo {
     }
 
 
-
-    public static void main(String[] args) {
-        DoctorRepo dr = new DoctorRepo();
-        ArrayList<VisitManager> listOfVisits = dr.showVisits(true, false, 2);
-        for (int i = 0; i < listOfVisits.size(); i++){
-            System.out.println(listOfVisits.get(i));
-        }
-    }
 }

@@ -51,7 +51,10 @@ public class OwnerRepo {
             PreparedStatement preparedStatement = this.database.getConnection().prepareStatement(query);
             preparedStatement.setString(1, newValue);
             preparedStatement.setInt(2, idOwner);
-            return  true;
+            int affectedRows = preparedStatement.executeUpdate();
+            if (affectedRows > 0){
+                return true;
+            }
 
         }catch(SQLException e){
             e.printStackTrace();
